@@ -1,0 +1,36 @@
+name: CI
+on: [pull_request, push]
+jobs:
+ mix_test:
+   name: mix test (elixir ${{ matrix.elixir }} OTP ${{ matrix.otp }})
+   strategy:
+     matrix:
+       elixir: ['1.7.0', '1.10.2']
+       include:
+         - elixir: '1.7.0'
+           otp: '21.x'
+         - elixir: '1.10.2'
+           otp: '22.x'
+   runs-on: ubuntu-16.04
+   steps:
+     - uses: actions/checkout@v2
+     - uses: actions/cache@v1
+       with:
+         path: deps
+         key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+         restore-keys: |
+           ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
+     - uses: actions/cache@v1
+       with:
+         path: _build
+         key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-build-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+         restore-keys: |
+           ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
+     - uses: actions/setup-elixir@v1
+       with:
+         otp-version: ${{ matrix.otp }}
+         elixir-version: ${{ matrix.elixir }}
+     - name: dependencies
+       run: mix deps.get
+     - name: tests
+       run: mix test
