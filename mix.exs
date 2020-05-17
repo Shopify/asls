@@ -7,7 +7,8 @@ defmodule AssemblyScriptLS.MixProject do
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      escript: escript()
     ]
   end
 
@@ -21,5 +22,9 @@ defmodule AssemblyScriptLS.MixProject do
     [
       {:nimble_parsec, "~> 0.5"}
     ]
+  end
+
+  defp escript do
+    [main_module: AssemblyScriptLS.CLI]
   end
 end
