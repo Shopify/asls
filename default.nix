@@ -1,3 +1,4 @@
+# nix-build -E 'with import <nixpkgs> {}; callPackage ./default.nix {}'
 { stdenv
   , makeWrapper
   , fetchFromGitHub
@@ -7,25 +8,27 @@
 
 stdenv.mkDerivation rec {
   name = "asls";
-  version = "0.1.0";
+  version = "0.1.1";
 
   src = fetchFromGitHub {
     owner = "saulecabrera";
     repo = "asls";
     rev = "v${version}";
-    sha256 = "182iyb529zp119bkw54jiifsh55nrca65vfpwa3bz0l31bb3zzq5";
+    sha256 = "1dhgl15cj34bdi4ld7p36hir54hkv4ak2wrdvf3b0881qsii82v0";
   };
 
   nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ erlangR22 elixir_1_7 ];
 
   buildPhase = ''
+    mkdir -p $PWD/.hex
+    export HOME=$PWD/.hex
     make
   '';
 
   installPhase = ''
     mkdir -p $out/bin
-    cp ${src}/bin/asls $out/bin/asls
+    cp ./bin/asls $out/bin/asls
     chmod +x $out/bin/asls
     wrapProgram $out/bin/asls --prefix PATH ":" ${erlangR22}/bin ;
   '';
