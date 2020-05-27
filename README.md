@@ -1,12 +1,7 @@
 # AssemblyScript Language Server
-
-![](https://github.com/saulecabrera/asls/workflows/.github/workflows/elixir.yml/badge.svg)
+![](https://github.com/saulecabrera/asls/workflows/CI/badge.svg)
 
 A frontend-independent language server for AssemblyScript.
-
-<p align="center">
-  <img src="extras/sh.png">
-</p>
 
 ## Installation
 
