@@ -22,7 +22,8 @@ defmodule AssemblyScriptLS.MixProject do
 
   defp deps do
     [
-      {:nimble_parsec, "~> 0.5"}
+      {:nimble_parsec, "~> 0.5"},
+      {:ok, "~> 2.3"}
     ]
   end
 
