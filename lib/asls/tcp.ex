@@ -9,9 +9,11 @@ defmodule AssemblyScriptLS.TCP do
   """
 
   alias AssemblyScriptLS.JsonRpc
+  alias AssemblyScriptLS.JsonRpc.Message
   require OK
+  require Logger
 
-  @opts [:binary, packet: 0, active: false, reuseaddr: true]
+  @opts [:binary, packet: :line, active: false, reuseaddr: true]
   @port 7658
 
   @type socket :: port
