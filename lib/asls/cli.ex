@@ -1,13 +1,17 @@
 defmodule AssemblyScriptLS.CLI do
-  @switches [port: :integer]
-  @aliases [p: :port]
+  @switches [port: :integer, help: :boolean, debug: :boolean]
+  @aliases [p: :port, h: :help, d: :debug]
 
   def main(argv) do
-    case OptionParser.parse(argv, switches: @switches, aliases: @aliases) do
-      {[port: port], [], []} ->
-        AssemblyScriptLS.TCP.start(port: port)
-      _ ->
-        help()
+    {opts, _, _} = OptionParser.parse(argv, switches: @switches, aliases: @aliases)
+      
+    if opts[:help] do
+      help()
+    else
+      port = opts[:port]
+      debug = opts[:debug]
+      level = if debug, do: :debug, else: :error
+      AssemblyScriptLS.TCP.start(port: port, debug: level)
     end
   end
 
@@ -19,7 +23,9 @@ defmodule AssemblyScriptLS.CLI do
       asls [flags]
 
     FLAGS
-      --port    Listen for tcp on the given port
+      --port   Listen for tcp on the given port
+      --help   Display help
+      --debug  Debug incoming and outgoing requests (devlelopment only)
     """
   end
 end
