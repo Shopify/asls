@@ -1,7 +1,7 @@
 defmodule AssemblyScriptLS.MixProject do
   use Mix.Project
 
-  @v "0.1.1"
+  @v "0.2.0"
 
   def project do
     [

@@ -47,3 +47,15 @@ asls requires:
 - OTP 22+
 
 
+## Releasing
+
+Create a dedicated commit with
+
+1. CHANGELOG update, following the format
+2. Update `mix.exs` with the right version
+3. Commit the changes specifying the new version in the commit title `v{major}.{minor}.{patch}`
+4. Create a git tag with the new version `git tag v{major}.{minor}.{patch}`
+5. Push the changes to GitHub
+6. Create a release
+7. Pack the executable with `make release` using `MIX_ENV=prod` and update `bin/asls` to the recently created release
+

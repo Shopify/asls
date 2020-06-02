@@ -2,9 +2,9 @@
 
 SHELL := /bin/bash
 
-default: setup
+default: release
 
-setup:
+release:
 	mix local.hex --force
 	mix clean
 	mix deps.get

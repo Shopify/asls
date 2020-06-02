@@ -24,3 +24,6 @@ asls-*.tar
 
 # Ignore binary
 bin/asls
+
+# Ignore nix results
+result
