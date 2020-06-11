@@ -27,3 +27,5 @@ bin/asls
 
 # Ignore nix results
 result
+
+bin.tar.gz
