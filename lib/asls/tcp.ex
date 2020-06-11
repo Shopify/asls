@@ -8,7 +8,7 @@ defmodule AssemblyScriptLS.TCP do
     - Starting the language server supervision tree
   """
 
-  alias AssemblyScriptLS.JsonRpc
+  alias AssemblyScriptLS.JsonRpc, as: RPC
   alias AssemblyScriptLS.JsonRpc.Message
   require OK
   require Logger
@@ -69,13 +69,12 @@ defmodule AssemblyScriptLS.TCP do
       json <- Jason.decode(payload, [keys: :atoms])
     after
       Logger.debug("Incoming message: \r\n #{inspect(json)}")
-      JsonRpc.recv(Message.new(json))
+      RPC.recv(Message.new(json))
       recv(socket)
     rescue
       # Ignore everything if the first line
       # is not a valid header
       :invalid_header ->
-        IO.inspect "Invalid header"
         recv(socket)
 
       # Ignore invalid json payloads
