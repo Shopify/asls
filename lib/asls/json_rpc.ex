@@ -1,15 +1,15 @@
 defmodule AssemblyScriptLS.JsonRpc do
   @state %{socket: nil, transport: nil}
+  use GenServer
 
   alias AssemblyScriptLS.Server
+  alias AssemblyScriptLS.JsonRpc.Message
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
-    Response,
     Notification,
+    Response,
     Unknown
   }
-
-  use GenServer
 
   # --- Client API
 
@@ -31,14 +31,22 @@ defmodule AssemblyScriptLS.JsonRpc do
     GenServer.call(__MODULE__, {:send, message})
   end
 
-  def respond(id, result, :result) do
-    opts = [jsonrpc: "2.0", id: id, result: result]
-    response = struct(Response, opts)
-    send(response)
+  def respond(type, id, payload) when type in [:error, :result] do
+    opts =
+      Keyword.new([{:id, id}, {type, payload}])
+      |> Enum.into(%{})
+
+    send(Message.from_attributes(opts))
   end
 
-  def respond(id, error, :error) do
+  def notify(type, message) when type in [:error, :warning, :info, :log] do
+    params = %{type: type, message: message}
+    opts = %{method: "window/showMessage", params: params}
+    send(Message.from_attributes(opts))
+  end
 
+  def notify(method, params) do
+    send(Message.from_attributes(%{method: method, params: params}))
   end
 
   # --- Callbacks
@@ -62,6 +70,7 @@ defmodule AssemblyScriptLS.JsonRpc do
 
   @impl true
   def handle_call({:recv, %Notification{} = notification}, _from, state) do
+    Server.handle_notification(notification)
     {:reply, :ok, state}
   end
 
