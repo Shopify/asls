@@ -1,10 +1,18 @@
 defmodule AssemblyScriptLS.Server do
+  @moduledoc """
+  The AssemblyScriptLS.Server module implements the Language Server Protocol
+  specification for AssemblyScript.
+  """
   @name "AssemblyScript Language Server"
   @state %{
     initialized: false,
     root_uri: nil,
     error_codes: %AssemblyScriptLS.Server.ErrorCodes{},
     build_ref: nil,
+    diagnostics: %{},
+    building?: false,
+    rebuild?: false,
+    documents: [],
   }
 
   alias AssemblyScriptLS.Server.Build
@@ -75,9 +83,45 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
+  def handle_cast({:notification, %Notification{method: "workspace/didChangeConfiguration"}}, state) do
+    cond do
+      state.building? ->
+        {:noreply, %{state | rebuild?: true}}
+      true ->
+        task = Build.perform(state.root_uri)
+        {:noreply, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
+    end
+  end
+
+  @impl true
+  def handle_cast({:notification, %Notification{method: "textDocument/didOpen"} = req}, state) do
+    uri = req.params[:textDocument].uri
+
+    RPC.notify("textDocument/publishDiagnostics", %{
+      uri: uri,
+      diagnostics: state.diagnostics[uri] || []
+    })
+
+    state =
+      cond do
+        Enum.find(state.documents, &(&1 == uri)) ->
+          state
+        true ->
+          %{state | documents: [uri | state.documents]}
+      end
+
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_cast({:notification, %Notification{method: "textDocument/didSave"} = req}, state) do
-    task = Task.async(Build, :perform, [])
-    {:noreply, %{state | build_ref: task.ref}}
+    cond do
+      state.building? ->
+        {:noreply, %{state | rebuild?: true}}
+      true ->
+        task = Build.perform(state.root_uri)
+        {:noreply, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
+    end
   end
 
   @impl true
@@ -87,20 +131,32 @@ defmodule AssemblyScriptLS.Server do
 
   @impl true
   def handle_info({ref, payload = %{}}, state) do
-    for {file, diagnostics} <- payload do
+    for doc <- state.documents do
       RPC.notify("textDocument/publishDiagnostics", %{
-        uri: "#{state.root_uri}/#{file}",
-        diagnostics: diagnostics
+        uri: doc,
+        diagnostics: payload[doc] || [],
       })
     end
 
-    {:noreply, state}
+    {:noreply, %{state | diagnostics: payload}}
+  end
+
+  # check if this gets called
+  @impl true
+  def handle_info({:DOWN, _, _, _, _}, state) do
+    cond do
+      state.rebuild? ->
+        task = Build.perform(state.root_uri)
+        {:noreply, %{state | rebuild?: false, building?: true, build_ref: task.ref}}
+      true ->
+        {:noreply, %{state | building?: false, build_ref: nil}}
+    end
   end
 
   @impl true
   def handle_info(_msg, state), do: {:noreply, state}
 
-  # --- Utilities
+  # --- Helpers
 
   defp capabilities do
     %{
