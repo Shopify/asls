@@ -95,7 +95,7 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
     if location?(h) do
       {:ok, [file, line, col], _, _, _, _} = parse_location(h)
 
-      # --- lins and columns are zero-based
+      # --- lines and columns are zero-based
       {
         :ok, 
         [file, String.to_integer(line) - 1, String.to_integer(col) - 1],

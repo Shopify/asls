@@ -1,4 +1,9 @@
 defmodule AssemblyScriptLS.JsonRpc do
+  @moduledoc """
+  The AssemblyScriptLS.JsonRpc module implements the JSON RPC protocol.
+  It is the layer between the transport layer (TCP) and the Language Server
+  Specification layer.
+  """
   @state %{socket: nil, transport: nil}
   use GenServer
 
@@ -13,7 +18,6 @@ defmodule AssemblyScriptLS.JsonRpc do
 
   # --- Client API
 
-  # TODO: fix name
   def start_link(opts \\ []) do
     socket = opts[:socket]
     transport = opts[:transport]
@@ -23,11 +27,11 @@ defmodule AssemblyScriptLS.JsonRpc do
     GenServer.start_link(__MODULE__, state, name: name)
   end
 
-  def recv(message) do
+  def recv(message, name \\ __MODULE__) do
     GenServer.call(__MODULE__, {:recv, message})
   end
 
-  def send(message) do
+  def send(message, name \\ __MODULE__) do
     GenServer.call(__MODULE__, {:send, message})
   end
 
