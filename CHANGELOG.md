@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] 2020-06-16
+
+### Added
+- [Diagnostics] Extended the diagnostics parser to extract diagnostics from arbitrary strings.
+- [RPC] Added a mechanism to wrap all RPC messages with a single interface using `JsonRpc.Message`
+- [Server] Trigger build on configuration change and on document save. From this change on
+  diagnostics are published to the language client.
+  The server tracks:
+  - Build state
+  - Build diagnostics
+  - Opened documents
+  - Whether a rebuild is needed
+
 ## [0.2.0] - 2020-06-02
 
 ### Added
