@@ -1,12 +1,10 @@
 defmodule AssemblyScriptLS.MixProject do
   use Mix.Project
 
-  @v "0.2.0"
-
   def project do
     [
       app: :asls,
-      version: @v,
+      version: version(),
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -34,4 +32,6 @@ defmodule AssemblyScriptLS.MixProject do
       path: "bin/asls"
     ]
   end
+
+  defp version, do: "0.3.0"
 end
