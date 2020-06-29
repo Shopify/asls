@@ -1,6 +1,7 @@
-.PHONY: setup
+.PHONY: release
 
 SHELL := /bin/bash
+MIX_ENV=prod
 
 default: release
 

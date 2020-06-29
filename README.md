@@ -12,7 +12,7 @@ Nix:
 nix-env -iA nixpkgs.asls
 ```
 
-(This is still in development)
+(This is not publicly released yet)
 
 ## Usage
 
@@ -27,11 +27,17 @@ asls --port PORT
 
 If no port is given, port 7658 is taken as default.
 
+For a detailed explanation of the commands, run:
+
+```sh
+asls -h
+```
+
 ## Features
 
 This project intends to support the following features, in the following order:
 
-- [ ] Compilation diagnostics: syntax and/or semantic errors
+- [x] Compilation diagnostics: syntax and/or semantic errors
 - [ ] Code completion: complete code that is actually supported by the underlying AS compiler
 - [ ] Go-to declaration / definition
 - [ ] Information on hover
@@ -56,5 +62,6 @@ Create a dedicated commit with
 4. Create a git tag with the new version `git tag v{major}.{minor}.{patch}`
 5. Push the changes to GitHub
 6. Create a release
-7. Pack the executable with `make release` using `MIX_ENV=prod` and update `bin/asls` to the recently created release
+7. Pack the executable with `make release` or just `make`
+8. Update `bin/asls` to the recently created release
 
