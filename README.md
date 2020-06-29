@@ -12,8 +12,7 @@ Nix:
 nix-env -iA nixpkgs.asls
 ```
 
-This part is not ready yet, for more information see [default.nix](default.nix).
-
+(This is still in development)
 
 ## Usage
 
