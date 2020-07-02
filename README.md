@@ -5,14 +5,19 @@ A frontend-independent language server for AssemblyScript.
 
 ## Installation
 
-The language server will be distributed as a self-contained executable through
-Nix:
+Make sure you have [Nix](https://nixos.wiki/wiki/Nix_Installation_Guide) installed, then, run:
 
 ```
-nix-env -iA nixpkgs.asls
+nix-env -i asls -f https://github.com/saulecabrera/asls/tarball/master/
 ```
 
-(This is not publicly released yet)
+this will make the language server available as a self-contained executable.
+
+Verify that everything was installed correctly with:
+
+```
+which asls
+```
 
 ## Usage
 
