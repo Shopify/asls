@@ -6,12 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [O.4.0] - 2020-07-03
+
 ### Added
 - [CLI] Added the `--version` flag
 - [Installation] Added `default.nix` with this, the server can be installed with
-- `nix-env -i asls -f https://github.com/saulecabrera/asls/tarball/master/`
+  `nix-env -i asls -f https://github.com/saulecabrera/asls/tarball/master/`
 
-## [0.3.0] 2020-06-16
+## [0.3.0] - 2020-06-16
 
 ### Added
 - [Diagnostics] Extended the diagnostics parser to extract diagnostics from arbitrary strings.
