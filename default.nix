@@ -7,7 +7,7 @@ pkgs.stdenv.mkDerivation rec {
   version = "0.4.0";
 
   src = pkgs.fetchurl {
-    url = "https://github.com/saulecabrera/asls/releases/download/v0.4.0/bin.tar.gz";
+    url = "https://github.com/saulecabrera/asls/releases/download/v${version}/bin.tar.gz";
     sha256 = "0zy89fvdhk2bj41fzx349gi8237ww96s21hlg6blqmfhvfxsnszg";
   };
 
