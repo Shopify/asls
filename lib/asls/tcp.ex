@@ -27,18 +27,22 @@ defmodule AssemblyScriptLS.TCP do
   could not be established.
   """
   def start(opts \\ []) do
-    port = Keyword.get(opts, :port) || @port
-    debug = Keyword.get(opts, :debug)
+    port = opts[:port] || @port
+    debug = opts[:debug]
     OK.try do
       socket <- :gen_tcp.listen(port, @opts)
-      socket <- :gen_tcp.accept(socket)
-      _ <- AssemblyScriptLS.start(socket, debug)
     after
-      Logger.debug("Server listening in port #{port}")
-      recv(socket)
+      IO.puts("Server listening @ #{port}")
+      case :gen_tcp.accept(socket) do
+        {:ok, socket} ->
+          AssemblyScriptLS.start(socket, debug)
+          recv(socket)
+        error ->
+          IO.puts(:stderr, "Error occurred while accepting connections @ #{port}. Error: #{inspect(error)}")
+      end
     rescue
       error ->
-        OK.failure(error)
+        IO.puts(:stderr, "Error occurred while listening to connections @ #{port}. Error: #{inspect(error)}")
     end
   end
 
