@@ -114,7 +114,7 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
-  def handle_cast({:notification, %Notification{method: "textDocument/didSave"} = req}, state) do
+  def handle_cast({:notification, %Notification{method: "textDocument/didSave"} = _req}, state) do
     cond do
       state.building? ->
         {:noreply, %{state | rebuild?: true}}
@@ -130,7 +130,7 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
-  def handle_info({ref, payload = %{}}, state) do
+  def handle_info({_ref, payload = %{}}, state) do
     for doc <- state.documents do
       RPC.notify("textDocument/publishDiagnostics", %{
         uri: doc,
