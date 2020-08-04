@@ -8,7 +8,7 @@ pkgs.stdenv.mkDerivation rec {
 
   src = pkgs.fetchurl {
     url = "https://github.com/saulecabrera/asls/releases/download/v${version}/bin.tar.gz";
-    sha256 = "1l1qk9hs8cs1fxlich043amld3x894ng2y6c4ka0n8k56pv6qqvy";
+    sha256 = "0d4z2zwpq87d6p0z983ay71n7m7cb39vmrgr8269snh10r4q0hzn";
   };
 
   buildInputs = [ pkgs.erlangR22 ];
