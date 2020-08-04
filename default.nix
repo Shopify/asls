@@ -4,7 +4,7 @@ in
 
 pkgs.stdenv.mkDerivation rec {
   pname = "asls";
-  version = "0.4.1";
+  version = "0.4.2";
 
   src = pkgs.fetchurl {
     url = "https://github.com/saulecabrera/asls/releases/download/v${version}/bin.tar.gz";
