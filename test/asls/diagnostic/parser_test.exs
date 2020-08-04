@@ -1,5 +1,5 @@
 defmodule AssemblyScriptLS.Diagnostic.ParserTest do
-  alias AssemblyScriptLS.Diagnostics.Parser
+  alias AssemblyScriptLS.Diagnostic.Parser
 
   use ExUnit.Case, async: true
 
@@ -49,8 +49,8 @@ defmodule AssemblyScriptLS.Diagnostic.ParserTest do
       npm ERR! A complete log of this run can be found in:
       npm ERR!     /Users/saulecabrera/.npm/_logs/2020-06-11T13_35_22_042Z-debug.log
     """
-
-    result = AssemblyScriptLS.Diagnostic.Parser.parse("foo/bar", output)
+    
+    result = Parser.parse("foo/bar", output)
 
     diagnostics = result["foo/bar/assembly/index.asc"]
     assert length(diagnostics) == 2
@@ -83,5 +83,64 @@ defmodule AssemblyScriptLS.Diagnostic.ParserTest do
       severity: 1,
       source: "AssemblyScript Language Server",
     }
+  end
+
+  test "subsequent diagnostics without location are ignored" do
+    output = ~s"""
+      WARNING Unknown option '--validate'
+      ERROR TS6054: File 'assembly/index..ts' not found.
+
+
+      ERROR TS2355: A function whose declared type is not 'void' must return a value.
+
+           public run(param: i32): i32 {
+                                   ~~~
+       in assembly/index.asc(8,29)
+
+      FAILURE 1 parse error(s)
+      npm ERR! code ELIFECYCLE
+      npm ERR! errno 1
+      npm ERR! @ asbuild:untouched: `asc assembly/index. -b build/untouched.wasm -t build/untouched.wat --validate --sourceMap --debug`
+      npm ERR! Exit status 1
+      npm ERR!
+      npm ERR! Failed at the @ asbuild:untouched script.
+      npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+    """
+
+    result = Parser.parse("foo/bar", output)
+    diagnostics = result["foo/bar/assembly/index.asc"]
+    assert length(diagnostics) === 1
+    assert hd(diagnostics) == %AssemblyScriptLS.Diagnostic{
+      code: "TS2355",
+      message: "A function whose declared type is not 'void' must return a value.",
+      range: %AssemblyScriptLS.Diagnostic.Range{
+        start: %AssemblyScriptLS.Diagnostic.Position{
+          character: 28, line: 7
+        },
+        end: %AssemblyScriptLS.Diagnostic.Position{
+          character: 28, line: 7
+        },
+      },
+      severity: 1,
+      source: "AssemblyScript Language Server",
+    }
+  end
+
+  test "diagnostics without location are ingnored" do
+    output = ~s"""
+      WARNING Unknown option '--validate'
+      ERROR TS6054: File 'assembly/index..ts' not found.
+
+      FAILURE 1 parse error(s)
+      npm ERR! code ELIFECYCLE
+      npm ERR! errno 1
+      npm ERR! @ asbuild:untouched: `asc assembly/index. -b build/untouched.wasm -t build/untouched.wat --validate --sourceMap --debug`
+      npm ERR! Exit status 1
+      npm ERR!
+      npm ERR! Failed at the @ asbuild:untouched script.
+      npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+    """
+
+    assert %{} == Parser.parse("foo/bar", output)
   end
 end

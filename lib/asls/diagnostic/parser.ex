@@ -35,30 +35,38 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
     ascii_string([uppercase, digit], min: 4)
     |> lookahead(string(":"))
 
-  location =
+  range =
     ignore(string("("))
     |> concat(ascii_string([digit], min: 1))
     |> ignore(string(","))
     |> concat(ascii_string([digit], min: 1))
     |> ignore(string(")"))
 
-  defparsec :parse_diagnostic,
-    type
-    |> eventually(code)
-    |> ignore(concat(
-      string(":"),
-      ascii_string([space], min: 1)
-    ))
-    |> concat(ascii_string([], min: 1))
-
-  defparsec :parse_location,
+  source =
     ignore(inkw)
     |> ignore(ascii_string([space], min: 1))
-    |> repeat(choice([
-      ascii_string([not: ?(], min: 1),
-      location
-    ]))
+    |> eventually(ascii_string([not: ?(], min: 1))
 
+  reason =
+    ignore(string(":"))
+    |> ignore(ascii_string([space], min: 1))
+    |> ascii_string([not: ?\n], min: 1)
+
+  diagnostic =
+    type
+    |> eventually(code)
+    |> eventually(reason)
+
+  location =
+    source
+    |> eventually(range)
+
+
+  defparsec :parse_diagnostic, diagnostic
+  defparsec :parse_location, location
+
+
+   
   @doc """
   Extracts compilation diagnostics from an abitrary string.
   The diagnostics are grouped by source uri.
@@ -73,11 +81,14 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
   defp do_parse([h | t], diagnostics, root_uri) do
     cond do
       diagnostic?(h) ->
-        # This will only work assuming that 
-        # all diagnostics have a location(source, line and column)
-        {:ok, [type, code, reason], _, _, _, _} = parse_diagnostic(h)
-        {:ok, [file, line, col], rest} = location(t)
-        do_parse(rest, [{type, code, reason, file, line, col} | diagnostics], root_uri)
+        case next_location(t) do
+          {:ok, {filename, line, col}, rest} ->
+            {:ok, [type, code, reason], _, _, _, _} = parse_diagnostic(h)
+            do_parse(rest, [{type, code, reason, filename, line, col} | diagnostics], root_uri)
+
+          {:ok, nil, rest} ->
+            do_parse(rest, diagnostics, root_uri)
+        end
       true ->
         do_parse(t, diagnostics, root_uri)
     end
@@ -91,22 +102,19 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
     end)
   end
 
-  defp location([h | t]) do
-    if location?(h) do
-      {:ok, [file, line, col], _, _, _, _} = parse_location(h)
-
-      # --- lines and columns are zero-based
-      {
-        :ok, 
-        [file, String.to_integer(line) - 1, String.to_integer(col) - 1],
-        t
-      }
-    else
-      location(t)
+  defp next_location([h | t]) do
+    cond do
+      location?(h) ->
+        {:ok, [filename, line, col], _, _, _, _} = parse_location(h)
+        {:ok, {filename, String.to_integer(line) - 1, String.to_integer(col) - 1}, t}
+      diagnostic?(h) -> # -- Stop if a subsequent diagnostic is found
+        {:ok, nil, [h | t]}
+      true ->
+        next_location(t)
     end
   end
 
-  defp location([]) do
+  defp next_location([]) do
     {:ok, nil, []}
   end
 
