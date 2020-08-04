@@ -17,6 +17,8 @@ Verify that everything was installed correctly with:
 
 ```
 which asls
+
+asls --version
 ```
 
 ## Usage
