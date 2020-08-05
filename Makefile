@@ -1,11 +1,11 @@
-.PHONY: release clean mix zip
+.PHONY: release clean mix zip hash
 
 SHELL := /bin/bash
 MIX_ENV=prod
 
 default: release
 
-release: clean mix zip
+release: clean mix zip hash
 
 clean:
 	rm -rf bin
@@ -19,3 +19,6 @@ mix:
 
 zip:
 	tar cvzf bin.tar.gz bin
+
+hash:
+	nix-hash --flat --base32 --type sha256 bin.tar.gz
