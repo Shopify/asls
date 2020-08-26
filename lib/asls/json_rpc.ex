@@ -27,11 +27,11 @@ defmodule AssemblyScriptLS.JsonRpc do
     GenServer.start_link(__MODULE__, state, name: name)
   end
 
-  def recv(message, name \\ __MODULE__) do
+  def recv(message, _name \\ __MODULE__) do
     GenServer.call(__MODULE__, {:recv, message})
   end
 
-  def send(message, name \\ __MODULE__) do
+  def send(message, _name \\ __MODULE__) do
     GenServer.call(__MODULE__, {:send, message})
   end
 
@@ -79,7 +79,7 @@ defmodule AssemblyScriptLS.JsonRpc do
   end
 
   @impl true
-  def handle_call({:recv, %Response{} = response}, _from, state) do
+  def handle_call({:recv, %Response{} = _response}, _from, state) do
     {:reply, :ok, state}
   end
 

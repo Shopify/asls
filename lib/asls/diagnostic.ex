@@ -44,7 +44,7 @@ defmodule AssemblyScriptLS.Diagnostic do
   
   def new(opts) do
     {line, rest} = Keyword.pop(opts, :line)
-    {char, rest} = Keyword.pop(rest, :character)
+    {char, _rest} = Keyword.pop(rest, :character)
     position = struct!(Position, [line: line, character: char])
     range = struct!(Range, [start: position, end: position])
 
