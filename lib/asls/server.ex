@@ -19,9 +19,7 @@ defmodule AssemblyScriptLS.Server do
   alias AssemblyScriptLS.JsonRpc, as: RPC
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
-    Reponse,
     Notification,
-    Unknown
   }
 
   use GenServer
