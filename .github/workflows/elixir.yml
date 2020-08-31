@@ -33,4 +33,4 @@ jobs:
      - name: dependencies
        run: mix deps.get
      - name: tests
-       run: mix test
+       run: mix compile && mix test

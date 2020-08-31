@@ -8,7 +8,8 @@ defmodule AssemblyScriptLS.MixProject do
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      escript: escript()
+      escript: escript(),
+      aliases: aliases()
     ]
   end
 
@@ -30,6 +31,12 @@ defmodule AssemblyScriptLS.MixProject do
     [
       main_module: AssemblyScriptLS.CLI,
       path: "bin/asls"
+    ]
+  end
+
+  defp aliases do
+    [
+      compile: ["compile --warnings-as-errors"]
     ]
   end
 
