@@ -31,8 +31,9 @@ defmodule AssemblyScriptLS.TCP do
     debug = opts[:debug]
     OK.try do
       socket <- :gen_tcp.listen(port, @opts)
+      assigned_port <- :inet.port(socket)
     after
-      IO.puts("Server listening @ #{port}")
+      IO.puts("Server listening @ #{assigned_port}")
       case :gen_tcp.accept(socket) do
         {:ok, socket} ->
           AssemblyScriptLS.start(socket, debug)
