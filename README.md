@@ -27,7 +27,7 @@ To update the language server just run:
 nix-env -i asls -f https://github.com/saulecabrera/asls/tarball/master/
 ```
 
-if for some reason you want to install a previous version of the language server, you can do so by running:
+If for some reason you want to install a previous version of the language server, you can do so by running:
 
 ```
 nix-env -i asls -f https://github.com/saulecabrera/asls/tarball/v<yourversion>/
