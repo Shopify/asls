@@ -11,6 +11,7 @@ defmodule AssemblyScriptLS.TCP do
   alias AssemblyScriptLS.JsonRpc, as: RPC
   alias AssemblyScriptLS.JsonRpc.Message
   require OK
+  use OK.Pipe
   require Logger
 
   @opts [:binary, packet: :line, active: false, reuseaddr: true]
@@ -23,29 +24,20 @@ defmodule AssemblyScriptLS.TCP do
   Listens for a tcp connection in a given port and
   starts the language server supervision tree.
 
-  Returns `{:error, reason}` if the socket connection
-  could not be established.
+  If an error occurs, it gets logged to stderr
   """
+  @spec start(Keyword.t()) :: no_return()
   def start(opts \\ []) do
     port = opts[:port] || @port
     debug = opts[:debug]
-    OK.try do
-      socket <- :gen_tcp.listen(port, @opts)
-      assigned_port <- :inet.port(socket)
-    after
-      IO.puts("Server listening @ #{assigned_port}")
-      case :gen_tcp.accept(socket) do
-        {:ok, socket} ->
-          AssemblyScriptLS.start(socket, debug)
-          recv(socket)
-        error ->
-          IO.puts(:stderr, "Error occurred while accepting connections @ #{port}. Error: #{inspect(error)}")
-      end
-    rescue
-      error ->
-        IO.puts(:stderr, "Error occurred while listening to connections @ #{port}. Error: #{inspect(error)}")
+    result = run(port, debug, @opts)
+
+    if OK.failure?(result) do
+      {:error, reason} = result
+      IO.puts(:stderr, reason)
     end
   end
+
 
   @doc """
   Sends a packet on a given socket. 
@@ -62,31 +54,66 @@ defmodule AssemblyScriptLS.TCP do
     :gen_tcp.send(socket, header <> body)
   end
 
+  defp run(port, debug_level, connection_opts) do
+    listen(port, connection_opts)
+    ~>> accept
+    ~>> AssemblyScriptLS.start(debug_level)
+    ~>> recv
+  end
+
+  defp listen(port, opts) do
+    OK.try do
+      socket <- :gen_tcp.listen(port, opts)
+      verified <- :inet.port(socket)
+    after
+      IO.puts(~s(Server listening @ #{verified}))
+      OK.success(socket)
+    rescue
+      e ->
+        OK.failure(~s(
+          Error occurred while listening to connections.
+          Error: #{inspect(e)}
+        ))
+    end
+  end
+
+  defp accept(socket) do
+    result = :gen_tcp.accept(socket)
+    if OK.failure?(result) do
+      {:error, e} = result
+      OK.failure(~s(
+        Error occurred while accepting connections.
+        Error: #{inspect(e)}
+      ))
+    else
+      result
+    end
+  end
+
   defp recv(socket) do
     OK.try do
       socket <- set_packet_type(socket, :line)
       header <- :gen_tcp.recv(socket, 0)
       length <- content_length(header)
       socket <- set_packet_type(socket, :raw)
-      # TODO: Fix the hardcoded byte count
-      _ <- :gen_tcp.recv(socket, 2)
-      payload <- :gen_tcp.recv(socket, length)
+      payload <- :gen_tcp.recv(socket, length + 2) # -- 2 is due to spaces
       json <- Jason.decode(payload, [keys: :atoms])
     after
       Logger.debug("Incoming message: \r\n #{inspect(json)}")
       RPC.recv(Message.new(json))
       recv(socket)
     rescue
-      # Ignore everything if the first line
-      # is not a valid header
+      #  -- Ignore everything if the first line is not a valid header
       :invalid_header ->
         recv(socket)
-
-      # Ignore invalid json payloads
+      # -- Ignore invalid json payloads
       %Jason.DecodeError{} ->
         recv(socket)
       error ->
-        OK.failure(error)
+        OK.failure(~s(
+          Error occurred while handling an incoming message.
+          Error: #{inspect(error)}
+        ))
     end
   end
 
@@ -105,8 +132,8 @@ defmodule AssemblyScriptLS.TCP do
     case :inet.setopts(socket, packet: type) do
       :ok ->
         OK.success(socket)
-      {:error, reason} ->
-        OK.failure(reason)
+      error ->
+        OK.wrap(error)
     end
   end
 end

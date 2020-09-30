@@ -1,17 +1,21 @@
 defmodule AssemblyScriptLS do
+  require OK
   require Logger
 
   def start(socket, debug) do
-    result =
-      socket
-      |> children
-      |> Supervisor.start_link(strategy: :one_for_one)
-
-    Application.ensure_all_started(:asls)
-
-    Logger.configure(level: debug)
-
-    result
+    OK.try do
+      _ <- Supervisor.start_link(children(socket), strategy: :one_for_one)
+      _ <- Application.ensure_all_started(:asls)
+    after
+      Logger.configure(level: debug)
+      OK.success(socket)
+    rescue
+      trace ->
+        OK.failure(~s(
+          Could not start the language server supervision tree.
+          Reason: #{trace}
+        ))
+    end
   end
 
   defp children(socket)do
