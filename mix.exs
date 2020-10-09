@@ -9,7 +9,8 @@ defmodule AssemblyScriptLS.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: escript(),
-      aliases: aliases()
+      aliases: aliases(),
+      elixirc_paths: elixirc_paths(Mix.env)
     ]
   end
 
@@ -23,7 +24,8 @@ defmodule AssemblyScriptLS.MixProject do
     [
       {:nimble_parsec, "~> 0.5"},
       {:ok, "~> 2.3"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 
@@ -41,4 +43,7 @@ defmodule AssemblyScriptLS.MixProject do
   end
 
   defp version, do: "0.5.1"
+
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_),     do: ["lib"]
 end
