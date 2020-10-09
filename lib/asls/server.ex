@@ -15,8 +15,9 @@ defmodule AssemblyScriptLS.Server do
     documents: [],
   }
 
-  alias AssemblyScriptLS.Server.Build
-  alias AssemblyScriptLS.JsonRpc, as: RPC
+  @builder Application.get_env(:asls, :builder)
+  @rpc Application.get_env(:asls, :rpc)
+
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
     Notification,
@@ -24,6 +25,8 @@ defmodule AssemblyScriptLS.Server do
 
   use GenServer
   
+  require OK
+
   # --- Client API
 
   def start_link(opts \\ []) do
@@ -32,11 +35,11 @@ defmodule AssemblyScriptLS.Server do
   end
 
   def handle_request(request, name \\ __MODULE__) do
-    GenServer.cast(name, {:request, request})
+    GenServer.call(name, {:request, request})
   end
 
   def handle_notification(notification, name \\ __MODULE__) do
-    GenServer.cast(name, {:notification, notification})
+    GenServer.call(name, {:notification, notification})
   end
 
   def name, do: @name
@@ -49,53 +52,52 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
-  def handle_cast({:request, %Request{method: "initialize", params: params} = req}, state) do
-    root_uri = 
+  def handle_call({:request, %Request{method: "initialize", params: params} = req}, _from, state) do
+    root_uri =
       URI.decode(URI.parse(params[:rootUri]).path)
 
-
-    case File.cd(root_uri) do
+    {payload, state} = case File.cd(root_uri) do
       :ok ->
-        RPC.respond(:result, req.id, %{
-          capabilities: capabilities(),
-          serverInfo: info(),
-        })
+        {
+          OK.success({:result, req.id, %{capabilities: capabilities(), serverInfo: info()}}),
+          %{state | root_uri: params[:rootUri]}
+        }
       _ ->
         message = """
         Couldn't initialize the server.
         The project root is invalid or doesn't exist.
         """
-        RPC.respond(:error, req.id, %{
-          code: state.error_codes.server_not_initialized,
-          message: message
-        })
+        {
+          OK.success({:error, req.id, %{code: state.error_codes.server_not_initialized, message: message}}),
+          state
+        }
     end
 
-
-    {:noreply, %{state | root_uri: params[:rootUri]}}
+    {:reply, payload, state}
   end
 
   @impl true
-  def handle_cast({:notification, %Notification{method: "initialized"}}, state) do
-    {:noreply, %{state | initialized: true}}
+  def handle_call({:notification, %Notification{method: "initialized"}}, _from, state) do
+    {:reply, :ok, %{state | initialized: true}}
   end
 
   @impl true
-  def handle_cast({:notification, %Notification{method: "workspace/didChangeConfiguration"}}, state) do
+  def handle_call({:notification, %Notification{method: "workspace/didChangeConfiguration"}}, _from, state) do
     cond do
       state.building? ->
-        {:noreply, %{state | rebuild?: true}}
+        {:reply, :ok, %{state | rebuild?: true}}
       true ->
-        task = Build.perform(state.root_uri)
-        {:noreply, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
+        task = @builder.perform(%{root_uri: state.root_uri})
+        {:reply, :ok, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
     end
   end
 
   @impl true
-  def handle_cast({:notification, %Notification{method: "textDocument/didOpen"} = req}, state) do
+  def handle_call({:notification, %Notification{method: "textDocument/didOpen"} = req}, from, state) do
+    GenServer.reply(from, :ok)
     uri = req.params[:textDocument].uri
 
-    RPC.notify("textDocument/publishDiagnostics", %{
+    @rpc.notify("textDocument/publishDiagnostics", %{
       uri: uri,
       diagnostics: state.diagnostics[uri] || []
     })
@@ -112,14 +114,19 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
-  def handle_cast({:notification, %Notification{method: "textDocument/didSave"} = _req}, state) do
+  def handle_call({:notification, %Notification{method: "textDocument/didSave"} = _req}, _from, state) do
     cond do
       state.building? ->
-        {:noreply, %{state | rebuild?: true}}
+        {:reply, :ok, %{state | rebuild?: true}}
       true ->
-        task = Build.perform(state.root_uri)
-        {:noreply, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
+        task = @builder.perform(%{root_uri: state.root_uri})
+        {:reply, :ok, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
     end
+  end
+
+  @impl true
+  def handle_call(_, _, state) do
+    {:reply, :ok, state}
   end
 
   @impl true
@@ -130,7 +137,7 @@ defmodule AssemblyScriptLS.Server do
   @impl true
   def handle_info({_ref, payload = %{}}, state) do
     for doc <- state.documents do
-      RPC.notify("textDocument/publishDiagnostics", %{
+      @rpc.notify("textDocument/publishDiagnostics", %{
         uri: doc,
         diagnostics: payload[doc] || [],
       })
@@ -139,12 +146,11 @@ defmodule AssemblyScriptLS.Server do
     {:noreply, %{state | diagnostics: payload}}
   end
 
-  # check if this gets called
   @impl true
   def handle_info({:DOWN, _, _, _, _}, state) do
     cond do
       state.rebuild? ->
-        task = Build.perform(state.root_uri)
+        task = @builder.perform(%{root_uri: state.root_uri})
         {:noreply, %{state | rebuild?: false, building?: true, build_ref: task.ref}}
       true ->
         {:noreply, %{state | building?: false, build_ref: nil}}
@@ -158,7 +164,7 @@ defmodule AssemblyScriptLS.Server do
 
   defp capabilities do
     %{
-      "textDocumentSync" => 2,
+      textDocumentSync: 2,
     }
   end
 
