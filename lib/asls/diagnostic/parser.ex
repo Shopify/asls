@@ -119,9 +119,13 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
   end
 
   defp diagnostic?("ERROR TS" <> _), do: true
+  defp diagnostic?("ERROR AS" <> _), do: true
   defp diagnostic?("WARNING TS" <> _), do: true
+  defp diagnostic?("WARNING AS" <> _), do: true
   defp diagnostic?("INFO TS" <> _), do: true
+  defp diagnostic?("INFO AS" <> _), do: true
   defp diagnostic?("PEDANTIC TS" <> _), do: true
+  defp diagnostic?("PEDANTIC AS" <> _), do: true
   defp diagnostic?(_), do: false
 
   defp location?("in " <> _), do: true
