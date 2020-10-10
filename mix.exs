@@ -40,5 +40,5 @@ defmodule AssemblyScriptLS.MixProject do
     ]
   end
 
-  defp version, do: "0.5.0"
+  defp version, do: "0.5.1"
 end
