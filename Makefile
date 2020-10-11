@@ -1,4 +1,4 @@
-.PHONY: release clean mix zip hash
+.PHONY: release clean mix zip hash test
 
 SHELL := /bin/bash
 MIX_ENV=prod
@@ -22,3 +22,7 @@ zip:
 
 hash:
 	nix-hash --flat --base32 --type sha256 bin.tar.gz
+
+test: MIX_ENV = test
+test:
+	mix test
