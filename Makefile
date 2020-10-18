@@ -1,4 +1,4 @@
-.PHONY: release clean mix zip hash test
+.PHONY: release clean mix zip hash test build
 
 SHELL := /bin/bash
 MIX_ENV=prod
@@ -26,3 +26,7 @@ hash:
 test: MIX_ENV = test
 test:
 	mix test
+
+build: MIX_ENV = prod
+build:
+	mix escript.build
