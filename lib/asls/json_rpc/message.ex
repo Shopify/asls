@@ -1,8 +1,10 @@
 defmodule AssemblyScriptLS.JsonRpc.Message do
-  @version "2.0"
   @derive Jason.Encoder
+  @version "2.0"
+  @type t :: Request.t() | Reponse.t() | Notification.t() | Unknown.t()
 
   defmodule Request do
+    @type t :: map()
     @derive Jason.Encoder
     @keys [:jsonrpc, :id, :method, :params]
     @enforce_keys @keys
@@ -11,6 +13,7 @@ defmodule AssemblyScriptLS.JsonRpc.Message do
   end
 
   defmodule Response do
+    @type t :: map()
     @derive Jason.Encoder
     @keys [:jsonrpc, :id, :result, :error]
     @enforce_keys [:jsonrpc, :id]
@@ -19,6 +22,7 @@ defmodule AssemblyScriptLS.JsonRpc.Message do
   end
 
   defmodule Notification do
+    @type t :: map()
     @derive Jason.Encoder
     @keys [:jsonrpc, :method, :params]
     @enforce_keys @keys
@@ -27,11 +31,18 @@ defmodule AssemblyScriptLS.JsonRpc.Message do
   end
 
   defmodule Unknown do
+    @type t :: map()
     defstruct []
   end
 
   def from_attributes(values = %{}) do
     new(Map.merge(%{jsonrpc: @version}, values))
+  end
+  
+  def from_attributes({type, id, payload}) when type in [:error, :result] do
+    Keyword.new([{:id, id}, {type, payload}])
+    |> Enum.into(%{})
+    |> from_attributes
   end
 
   def new(%{jsonrpc: _v, id: _id, method: _method, params: _params} = values) do
@@ -57,4 +68,6 @@ defmodule AssemblyScriptLS.JsonRpc.Message do
   def new(_) do
     struct(Unknown, [])
   end
+
+  def rpc_version, do: @version
 end
