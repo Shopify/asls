@@ -25,7 +25,8 @@ defmodule AssemblyScriptLS.MixProject do
       {:nimble_parsec, "~> 0.5"},
       {:ok, "~> 2.3"},
       {:jason, "~> 1.2"},
-      {:mox, "~> 1.0", only: :test}
+      {:mox, "~> 1.0", only: :test},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 
