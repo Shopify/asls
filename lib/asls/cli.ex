@@ -1,37 +1,46 @@
 defmodule AssemblyScriptLS.CLI do
-  @switches [port: :integer, help: :boolean, debug: :boolean, version: :boolean]
-  @aliases [p: :port, h: :help, d: :debug, v: :version]
   @version Mix.Project.config[:version]
 
   def main(argv) do
-    args = OptionParser.parse(argv, switches: @switches, aliases: @aliases)
-    case args do
-      {[help: true], _, _} ->
-        help()
-      {[version: true], _, _} ->
-        IO.puts "v#{@version}"
-      {opts, [], []} ->
-        port = opts[:port]
-        debug = opts[:debug]
-        level = if debug, do: :debug, else: :error
-        AssemblyScriptLS.TCP.start(port: port, debug: level)
-      {_parsed, _args, _invalid} ->
-        help()
-    end
+    parse!(argv)
   end
 
-  defp help do
-    IO.puts """
-    The AssemblyScript Language Server
+  defp parse!(argv) do
+    result = Optimus.parse!(config(), argv)
+    process(result)
+  end
 
-    USAGE
-      asls [flags]
+  defp process(result = %Optimus.ParseResult{}) do
+    port = result.options.port
+    level = if result.flags.debug, do: :debug, else: :error
+    AssemblyScriptLS.TCP.start(port: port, debug: level)
+  end
 
-    FLAGS
-      --port      Listen for tcp on the given port
-      --debug     Debug incoming and outgoing requests (devlelopment only)
-      --help      Display help
-      --version   Display the server version 
-    """
+  defp config do
+    Optimus.new!(
+      name: "asls",
+      version: "v#{@version}",
+      allow_unknown_args: false,
+      parse_double_dash: true,
+      flags: [
+        debug: [
+          short: "-d",
+          long: "--debug",
+          help: "Debug incoming and outgoing requests (Development only)",
+          multiple: false,
+          required: false
+        ],
+      ],
+      options: [
+        port: [
+          value_name: "PORT",
+          short: "-p",
+          long: "--port",
+          help: "Listen for tcp connections in the given port",
+          required: false,
+          parser: :integer
+        ],
+      ]
+    )
   end
 end
