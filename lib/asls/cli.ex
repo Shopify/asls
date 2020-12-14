@@ -1,6 +1,8 @@
 defmodule AssemblyScriptLS.CLI do
   @version Mix.Project.config[:version]
 
+  alias AssemblyScriptLS.Environment
+
   def main(argv) do
     parse!(argv)
   end
@@ -14,6 +16,10 @@ defmodule AssemblyScriptLS.CLI do
     port = result.options.port
     level = if result.flags.debug, do: :debug, else: :error
     AssemblyScriptLS.TCP.start(port: port, debug: level)
+  end
+
+  defp process({[:setup], %Optimus.ParseResult{args: args}}) do
+    Environment.setup_editor(args.editor)
   end
 
   defp config do
@@ -40,6 +46,26 @@ defmodule AssemblyScriptLS.CLI do
           required: false,
           parser: :integer
         ],
+      ],
+      subcommands: [
+        setup: [
+          name: "setup",
+          about: "Setup the environment for the integration of the language server with a specific editor",
+          args: [
+            editor: [
+              value_name: "EDITOR",
+              help: "Editor to perform the setup for. The supported editors are: #{Environment.format_supported_editors()}",
+              required: true,
+              parser: fn(input) ->
+                if Environment.supported_editor?(input) do
+                  {:ok, input}
+                else
+                  {:error, "the supported editors are #{Environment.format_supported_editors()}"}
+                end
+              end
+            ]
+          ]
+        ]
       ]
     )
   end
