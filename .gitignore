@@ -29,3 +29,6 @@ bin/asls
 result
 
 bin.tar.gz
+
+.idea
+asls.iml
