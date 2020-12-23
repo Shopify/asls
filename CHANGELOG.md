@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-- [Server] Improve backpressure and communication mechanism
+- [Server] Improve the backpressure and communication mechanism
 - [Runtime] Added a runtime module to represent the resolution of runtime dependencies
 
 ## [0.5.1] - 2020-10-10
