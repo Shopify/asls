@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Environment, Editors.VSCode] Add setup command ([#44](https://github.com/saulecabrera/asls/pull/44))
 - [Server] Improve the backpressure and communication mechanism
 - [Runtime] Added a runtime module to represent the resolution of runtime dependencies
 
