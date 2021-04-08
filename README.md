@@ -72,6 +72,21 @@ asls requires:
 - OTP 22+
 
 
+### Using nix shell and direnv
+
+If you don't want to worry about installing the required dependencies for
+development, you can opt to use nix and direnv. This will ensure that when
+switching to the directory of the project, the correct dependencies will be
+loaded.
+
+Requirements:
+
+1. Have nix installed
+2. Have [direnv](https://direnv.net/) installed; make sure to [hook](https://direnv.net/docs/hook.html) your shell
+3. Run `direnv allow` in this directory
+4. Run `elixir --version` and verify that the version reported is `1.10.4`
+
+
 ## Releasing
 
 Create a dedicated commit with
