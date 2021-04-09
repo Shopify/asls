@@ -71,34 +71,36 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
   Extracts compilation diagnostics from an abitrary string.
   The diagnostics are grouped by source uri.
   """
-  @spec parse(String.t, String.t) :: %{String.t => [Diagnostic.t]}
-  def parse(root_uri, content) do
-    String.split(content, "\n")
+  @spec parse(String.t, String.t) :: {String.t, [Diagnostic.t]}
+  def parse(uri, content) do
+    diagnostics = String.split(content, "\n")
     |> Enum.map(&String.trim/1)
-    |> do_parse([], root_uri)
+    |> do_parse([])
+
+    # Mostly a hack due to how tasks are setup right now
+    # should be good to remove once tasks are supervised and can be awaited on
+    {uri, diagnostics}
   end
 
-  defp do_parse([h | t], diagnostics, root_uri) do
+  defp do_parse([h | t], diagnostics) do
     cond do
       diagnostic?(h) ->
         case next_location(t) do
           {:ok, {filename, line, col}, rest} ->
             {:ok, [type, code, reason], _, _, _, _} = parse_diagnostic(h)
-            do_parse(rest, [{type, code, reason, filename, line, col} | diagnostics], root_uri)
+            do_parse(rest, [{type, code, reason, filename, line, col} | diagnostics])
 
           {:ok, nil, rest} ->
-            do_parse(rest, diagnostics, root_uri)
+            do_parse(rest, diagnostics)
         end
       true ->
-        do_parse(t, diagnostics, root_uri)
+        do_parse(t, diagnostics)
     end
   end
 
-  defp do_parse([], diagnostics, root_uri) do
-    Enum.reduce(diagnostics, %{}, fn {type, code, reason, file, line, col}, acc ->
-      diagnostic =
+  defp do_parse([], diagnostics) do
+    Enum.map(diagnostics, fn {type, code, reason, _file, line, col} ->
         Diagnostic.new([line: line, character: col, severity: type, code: code, message: reason])
-      Map.update(acc, "#{root_uri}/#{file}", [diagnostic], &([diagnostic | &1]))
     end)
   end
 
