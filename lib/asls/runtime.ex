@@ -37,7 +37,7 @@ defmodule AssemblyScriptLS.Runtime do
   defp executable(env) do
     cond do
       File.exists?(@asc_paths.local) ->
-        OK.success(%{env | executable: @asc_paths.local})
+        OK.success(%{env | executable: Path.absname(@asc_paths.local)})
       true ->
         {_, exit} = System.cmd("which", [@asc_paths.global])
         if exit == 0 do
