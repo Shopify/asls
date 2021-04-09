@@ -8,20 +8,19 @@ defmodule AssemblyScriptLS.Server do
     initialized: false,
     root_uri: nil,
     error_codes: %AssemblyScriptLS.Server.ErrorCodes{},
-    build_ref: nil,
-    diagnostics: %{},
-    building?: false,
-    rebuild?: false,
-    documents: [],
+    analyses: %{},
+    runtime: nil
   }
 
-  @builder Application.get_env(:asls, :builder)
   @rpc Application.get_env(:asls, :rpc)
 
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
     Notification,
   }
+
+  alias AssemblyScriptLS.Analysis
+  alias AssemblyScriptLS.Runtime
 
   use GenServer
   
@@ -73,7 +72,10 @@ defmodule AssemblyScriptLS.Server do
         }
     end
 
-    {:reply, payload, state}
+    # FIXME: Ensure that runtime dependencies are met
+    # before blindly initializing the server
+    {:ok, rt} = Runtime.ensure(params[:rootUri])
+    {:reply, payload, %{state | runtime: rt}}
   end
 
   @impl true
@@ -82,46 +84,17 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
-  def handle_call({:notification, %Notification{method: "workspace/didChangeConfiguration"}}, _from, state) do
-    cond do
-      state.building? ->
-        {:reply, :ok, %{state | rebuild?: true}}
-      true ->
-        task = @builder.perform(%{root_uri: state.root_uri})
-        {:reply, :ok, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
-    end
-  end
-
-  @impl true
   def handle_call({:notification, %Notification{method: "textDocument/didOpen"} = req}, from, state) do
     GenServer.reply(from, :ok)
-    uri = req.params[:textDocument].uri
-
-    @rpc.notify("textDocument/publishDiagnostics", %{
-      uri: uri,
-      diagnostics: state.diagnostics[uri] || []
-    })
-
-    state =
-      cond do
-        Enum.find(state.documents, &(&1 == uri)) ->
-          state
-        true ->
-          %{state | documents: [uri | state.documents]}
-      end
-
+    state = enqueue_analysis(state, req.params[:textDocument].uri)
     {:noreply, state}
   end
 
   @impl true
-  def handle_call({:notification, %Notification{method: "textDocument/didSave"} = _req}, _from, state) do
-    cond do
-      state.building? ->
-        {:reply, :ok, %{state | rebuild?: true}}
-      true ->
-        task = @builder.perform(%{root_uri: state.root_uri})
-        {:reply, :ok, %{state | build_ref: task.ref, building?: true, rebuild?: false}}
-    end
+  def handle_call({:notification, %Notification{method: "textDocument/didSave"} = req}, from, state) do
+    GenServer.reply(from, :ok)
+    enqueue_analysis(state, req.params[:textDocument].uri)
+    {:noreply, state}
   end
 
   @impl true
@@ -135,26 +108,23 @@ defmodule AssemblyScriptLS.Server do
   end
 
   @impl true
-  def handle_info({_ref, payload = %{}}, state) do
-    for doc <- state.documents do
-      @rpc.notify("textDocument/publishDiagnostics", %{
-        uri: doc,
-        diagnostics: payload[doc] || [],
-      })
-    end
+  def handle_info({_ref, {uri, payload}}, state) do
+    @rpc.notify("textDocument/publishDiagnostics", %{
+      uri: uri,
+      diagnostics: payload
+    })
 
-    {:noreply, %{state | diagnostics: payload}}
+    analysis = state.analyses[uri]
+               |> Analysis.diganostics(payload)
+
+    state = %{state | analyses: Map.put(state.analyses, uri, analysis)}
+
+    {:noreply, state}
   end
 
   @impl true
   def handle_info({:DOWN, _, _, _, _}, state) do
-    cond do
-      state.rebuild? ->
-        task = @builder.perform(%{root_uri: state.root_uri})
-        {:noreply, %{state | rebuild?: false, building?: true, build_ref: task.ref}}
-      true ->
-        {:noreply, %{state | building?: false, build_ref: nil}}
-    end
+    {:noreply, state}
   end
 
   @impl true
@@ -172,5 +142,16 @@ defmodule AssemblyScriptLS.Server do
     %{
       name: @name,
     }
+  end
+
+  def enqueue_analysis(state, uri) do
+    analysis = state.analyses[uri]
+    if analysis do
+      analysis = Analysis.reenqueue(analysis)
+      %{state | analyses: Map.put(state.analyses, uri, analysis)}
+    else
+      analysis = Analysis.new(state.runtime, uri)
+      %{state | analyses: Map.put_new(state.analyses, uri, analysis)}
+    end
   end
 end
