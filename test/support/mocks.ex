@@ -1,2 +1,3 @@
-Mox.defmock(AssemblyScriptLS.Server.Build.Mock, for: AssemblyScriptLS.Server.Job)
 Mox.defmock(AssemblyScriptLS.JsonRpc.Mock, for: AssemblyScriptLS.JsonRpc.Behaviour)
+Mox.defmock(AssemblyScriptLS.Analysis.Mock, for: AssemblyScriptLS.Analysis.Behaviour)
+Mox.defmock(AssemblyScriptLS.Runtime.Mock, for: AssemblyScriptLS.Runtime.Behaviour)
