@@ -13,14 +13,13 @@ defmodule AssemblyScriptLS.Server do
   }
 
   @rpc Application.get_env(:asls, :rpc)
+  @runtime Application.get_env(:asls, :runtime)
+  @analysis Application.get_env(:asls, :analysis)
 
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
     Notification,
   }
-
-  alias AssemblyScriptLS.Analysis
-  alias AssemblyScriptLS.Runtime
 
   use GenServer
   
@@ -74,7 +73,7 @@ defmodule AssemblyScriptLS.Server do
 
     # FIXME: Ensure that runtime dependencies are met
     # before blindly initializing the server
-    {:ok, rt} = Runtime.ensure(params[:rootUri])
+    {:ok, rt} = @runtime.ensure(params[:rootUri])
     {:reply, payload, %{state | runtime: rt}}
   end
 
@@ -86,14 +85,22 @@ defmodule AssemblyScriptLS.Server do
   @impl true
   def handle_call({:notification, %Notification{method: "textDocument/didOpen"} = req}, from, state) do
     GenServer.reply(from, :ok)
-    state = enqueue_analysis(state, req.params[:textDocument].uri)
+
+    uri = req.params[:textDocument].uri
+    state = enqueue_analysis(state, uri)
+
+    @rpc.notify("textDocument/publishDiagnostics", %{
+      uri: uri,
+      diagnostics: state.analyses[uri].diagnostics
+    })
+
     {:noreply, state}
   end
 
   @impl true
   def handle_call({:notification, %Notification{method: "textDocument/didSave"} = req}, from, state) do
     GenServer.reply(from, :ok)
-    enqueue_analysis(state, req.params[:textDocument].uri)
+    state = enqueue_analysis(state, req.params[:textDocument].uri)
     {:noreply, state}
   end
 
@@ -115,7 +122,7 @@ defmodule AssemblyScriptLS.Server do
     })
 
     analysis = state.analyses[uri]
-               |> Analysis.diganostics(payload)
+               |> @analysis.diagnostics(payload)
 
     state = %{state | analyses: Map.put(state.analyses, uri, analysis)}
 
@@ -147,10 +154,10 @@ defmodule AssemblyScriptLS.Server do
   def enqueue_analysis(state, uri) do
     analysis = state.analyses[uri]
     if analysis do
-      analysis = Analysis.reenqueue(analysis)
+      analysis = @analysis.reenqueue(analysis)
       %{state | analyses: Map.put(state.analyses, uri, analysis)}
     else
-      analysis = Analysis.new(state.runtime, uri)
+      analysis = @analysis.new(state.runtime, uri)
       %{state | analyses: Map.put_new(state.analyses, uri, analysis)}
     end
   end

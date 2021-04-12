@@ -2,6 +2,8 @@ defmodule AssemblyScriptLS.Runtime do
   require OK
   use OK.Pipe
 
+  @behaviour AssemblyScriptLS.Runtime.Behaviour
+
   @asc_paths %{local: "./node_modules/.bin/asc", global: "asc"}
   @config_file_path "asconfig.json"
   @type t :: %__MODULE__{
