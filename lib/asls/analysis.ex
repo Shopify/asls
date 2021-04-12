@@ -7,6 +7,8 @@ defmodule AssemblyScriptLS.Analysis do
   alias AssemblyScriptLS.Runtime
   alias AssemblyScriptLS.Diagnostic
 
+  @behaviour AssemblyScriptLS.Analysis.Behaviour
+
   require Logger
 
   @type t :: %__MODULE__{
@@ -30,7 +32,7 @@ defmodule AssemblyScriptLS.Analysis do
     ])
   end
 
-  def diganostics(analysis = %__MODULE__{}, diagnostics) do
+  def diagnostics(analysis = %__MODULE__{}, diagnostics) do
     %{analysis | diagnostics: diagnostics}
   end
 
