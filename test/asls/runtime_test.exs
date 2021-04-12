@@ -78,7 +78,7 @@ defmodule AssemblyScriptLS.RuntimeTest do
 
       with_mocks([file]) do
         {:ok, env} = Runtime.ensure "root"
-        assert env.executable == "./node_modules/.bin/asc"
+        assert String.contains?(env.executable, "/node_modules/.bin/asc")
         assert env.target == "debug"
         assert env.root_uri == "root"
       end

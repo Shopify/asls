@@ -50,11 +50,11 @@ defmodule AssemblyScriptLS.Diagnostic.ParserTest do
       npm ERR!     /Users/saulecabrera/.npm/_logs/2020-06-11T13_35_22_042Z-debug.log
     """
     
-    result = Parser.parse("foo/bar", output)
+    result = Parser.parse("foo/bar/assembly/index.asc", output)
 
-    diagnostics = result["foo/bar/assembly/index.asc"]
+    {"foo/bar/assembly/index.asc", diagnostics} = result
     assert length(diagnostics) == 2
-    assert hd(diagnostics) == %AssemblyScriptLS.Diagnostic{
+    assert hd(tl(diagnostics)) == %AssemblyScriptLS.Diagnostic{
       code: "TS2304",
       message: "Cannot find name 'return5'.",
       range: %AssemblyScriptLS.Diagnostic.Range{
@@ -68,8 +68,8 @@ defmodule AssemblyScriptLS.Diagnostic.ParserTest do
       severity: 1,
       source: "AssemblyScript Language Server",
     }
-    
-    assert hd(tl(diagnostics)) == %AssemblyScriptLS.Diagnostic{
+
+    assert hd(diagnostics) == %AssemblyScriptLS.Diagnostic{
       code: "TS2355",
       message: "A function whose declared type is not 'void' must return a value.",
       range: %AssemblyScriptLS.Diagnostic.Range{
@@ -107,8 +107,8 @@ defmodule AssemblyScriptLS.Diagnostic.ParserTest do
       npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
     """
 
-    result = Parser.parse("foo/bar", output)
-    diagnostics = result["foo/bar/assembly/index.asc"]
+    result = Parser.parse("foo/bar/assembly/index.asc", output)
+    {"foo/bar/assembly/index.asc", diagnostics} = result
     assert length(diagnostics) === 1
     assert hd(diagnostics) == %AssemblyScriptLS.Diagnostic{
       code: "TS2355",
@@ -141,6 +141,6 @@ defmodule AssemblyScriptLS.Diagnostic.ParserTest do
       npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
     """
 
-    assert %{} == Parser.parse("foo/bar", output)
+    assert {"foo/bar", []} == Parser.parse("foo/bar", output)
   end
 end
