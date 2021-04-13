@@ -15,7 +15,7 @@ defmodule AssemblyScriptLS.Analysis do
     id: String.t,
     runtime: Runtime.t,
     task: Task.t,
-    diagnostics: [Diagnostic]
+    diagnostics: [Diagnostic.t]
   }
   @required_keys [:runtime, :id, :diagnostics]
   @enforce_keys @required_keys
