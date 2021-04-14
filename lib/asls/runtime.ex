@@ -50,6 +50,14 @@ defmodule AssemblyScriptLS.Runtime do
     end
   end
 
+  def to_string(rt = %__MODULE__{}) do
+    """
+    Project root: #{URI.decode(URI.parse(rt.root_uri).path)};
+    AssemblyScript compiler: #{rt.executable};
+    Compilation target: #{rt.target};
+    """
+  end
+
   defp configuration(env) do
     if File.exists?(@config_file_path) do
       OK.success(env)
