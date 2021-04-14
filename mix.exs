@@ -40,7 +40,8 @@ defmodule AssemblyScriptLS.MixProject do
 
   defp aliases do
     [
-      compile: ["compile --warnings-as-errors"]
+      compile: ["compile --warnings-as-errors"],
+      build: ["escript.build"],
     ]
   end
 
