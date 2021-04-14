@@ -86,6 +86,15 @@ Requirements:
 3. Run `direnv allow` in this directory
 4. Run `elixir --version` and verify that the version reported is `1.10.4`
 
+### Building
+
+To build the language server:
+
+
+1. Run `make mix` to install dependencies
+2. Run `make build` to build the language server binary, it will be placed under
+   `bin/asls`
+
 
 ## Releasing
 
