@@ -2,6 +2,8 @@ defmodule AssemblyScriptLS.Runtime do
   require OK
   use OK.Pipe
 
+  @behaviour AssemblyScriptLS.Runtime.Behaviour
+
   @asc_paths %{local: "./node_modules/.bin/asc", global: "asc"}
   @config_file_path "asconfig.json"
   @type t :: %__MODULE__{
@@ -37,7 +39,7 @@ defmodule AssemblyScriptLS.Runtime do
   defp executable(env) do
     cond do
       File.exists?(@asc_paths.local) ->
-        OK.success(%{env | executable: @asc_paths.local})
+        OK.success(%{env | executable: Path.absname(@asc_paths.local)})
       true ->
         {_, exit} = System.cmd("which", [@asc_paths.global])
         if exit == 0 do
