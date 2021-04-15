@@ -84,4 +84,21 @@ defmodule AssemblyScriptLS.RuntimeTest do
       end
     end
   end
+
+  describe "to_string/1" do
+    test "returns a string representation of the given runtime struct" do
+      exists = fn _-> true end
+      file = {File, [:passthrough], [cd: fn _ -> :ok end, exists?: exists, read!: fn _ -> Jason.encode!(@valid_config_file) end]}
+
+      with_mocks([file]) do
+        {:ok, env} = Runtime.ensure "root"
+        expected = """
+        Project root: root;
+        AssemblyScript compiler: #{env.executable};
+        Compilation target: #{env.target};
+        """
+        assert expected == Runtime.to_string(env)
+      end
+    end
+  end
 end

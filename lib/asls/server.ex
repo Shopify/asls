@@ -51,35 +51,36 @@ defmodule AssemblyScriptLS.Server do
 
   @impl true
   def handle_call({:request, %Request{method: "initialize", params: params} = req}, _from, state) do
-    root_uri =
-      URI.decode(URI.parse(params[:rootUri]).path)
-
-    {payload, state} = case File.cd(root_uri) do
-      :ok ->
+    {payload, state} = case @runtime.ensure(params[:rootUri]) do
+      {:ok, rt} ->
         {
           OK.success({:result, req.id, %{capabilities: capabilities(), serverInfo: info()}}),
-          %{state | root_uri: params[:rootUri]}
+          %{state | root_uri: rt.root_uri, runtime: rt}
         }
-      _ ->
-        message = """
-        Couldn't initialize the server.
-        The project root is invalid or doesn't exist.
-        """
+      {:error, reason} ->
         {
-          OK.success({:error, req.id, %{code: state.error_codes.server_not_initialized, message: message}}),
-          state
+          OK.success({:error, req.id, %{code: state.error_codes.server_not_initialized, message: reason}}),
+          state,
         }
     end
 
-    # FIXME: Ensure that runtime dependencies are met
-    # before blindly initializing the server
-    {:ok, rt} = @runtime.ensure(params[:rootUri])
-    {:reply, payload, %{state | runtime: rt}}
+    {:reply, payload, state}
   end
 
   @impl true
-  def handle_call({:notification, %Notification{method: "initialized"}}, _from, state) do
-    {:reply, :ok, %{state | initialized: true}}
+  def handle_call({:notification, %Notification{method: "initialized"}}, from, state) do
+    GenServer.reply(from, :ok)
+
+    @rpc.notify(
+      :info,
+      """
+      Language server initialized with the following runtime params:
+
+      #{@runtime.to_string(state.runtime)}
+      """
+    )
+
+    {:noreply, %{state | initialized: true}}
   end
 
   @impl true

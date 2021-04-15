@@ -34,7 +34,7 @@ defmodule AssemblyScriptLS.ServerTest do
       req = Message.new(%{jsonrpc: Message.rpc_version, id: 1, method: "initialize", params: params})
 
       AssemblyScriptLS.Runtime.Mock
-      |> expect(:ensure, fn _ -> {:ok, %{}} end)
+      |> expect(:ensure, fn _ -> {:ok, %{root_uri: @root_path}} end)
 
       {:ok, {type, id, server_info}} = Server.handle_request(req, @process)
 
@@ -54,7 +54,7 @@ defmodule AssemblyScriptLS.ServerTest do
       req = Message.new(%{jsonrpc: Message.rpc_version, id: 1, method: "initialize", params: params})
 
       AssemblyScriptLS.Runtime.Mock
-      |> expect(:ensure, fn _ -> {:ok, %{}} end)
+      |> expect(:ensure, fn _ -> {:error, "The project root is invalid or doesn't exist."} end)
 
       {:ok, {type, id, payload}} = Server.handle_request(req, @process)
 
@@ -62,10 +62,7 @@ defmodule AssemblyScriptLS.ServerTest do
       assert id == 1
       assert payload == %{
         code: -32002,
-        message: """
-        Couldn't initialize the server.
-        The project root is invalid or doesn't exist.
-        """
+        message: "The project root is invalid or doesn't exist."
       }
       state = :sys.get_state(@process)
       refute state[:root_uri]
@@ -75,6 +72,14 @@ defmodule AssemblyScriptLS.ServerTest do
   describe "handle_notification/2" do
     test "on initialized notification: sets the server state to initialized" do
       notification = Message.new(%{jsonrpc: Message.rpc_version, method: "initialized", params: %{}})
+
+      AssemblyScriptLS.JsonRpc.Mock
+      |> expect(:notify, fn :info, _ -> :ok end)
+
+
+      AssemblyScriptLS.Runtime.Mock
+      |> expect(:to_string, fn _ -> "" end)
+
       :ok = Server.handle_notification(notification, @process)
       state = :sys.get_state(@process)
       assert state[:initialized]
