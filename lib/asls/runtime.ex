@@ -9,15 +9,16 @@ defmodule AssemblyScriptLS.Runtime do
   @type t :: %__MODULE__{
     root_uri: String.t,
     executable: String.t,
-    target: String.t
+    target: String.t,
+    asconfig?: boolean(),
   }
    
-  defstruct [:root_uri, :executable, :target]
+  defstruct [:root_uri, :executable, :target, :asconfig?]
 
   @doc """
   Ensures the runtime requirements of the language server
   """
-  @spec ensure(String.t) :: {:ok, __MODULE__.t} | {:error, String.t}
+  @spec ensure(String.t) :: {:ok, __MODULE__.t()} | {:error, String.t}
   def ensure(uri) do
     OK.wrap(%__MODULE__{root_uri: uri})
     ~>> root
@@ -60,13 +61,17 @@ defmodule AssemblyScriptLS.Runtime do
 
   defp configuration(env) do
     if File.exists?(@config_file_path) do
-      OK.success(env)
+      OK.success(%{env | asconfig?: true})
     else
-      OK.failure("No #{@config_file_path} file found.")
+      OK.success(%{env | asconfig?: false})
     end
   end
 
-  defp target(env) do
+  defp target(env = %__MODULE__{asconfig?: false}) do
+    OK.success(%{env | target: "release"})
+  end
+
+  defp target(env = %__MODULE__{asconfig?: true}) do
     contents = File.read!(@config_file_path)
     result = Jason.decode(contents, keys: :atoms)
     

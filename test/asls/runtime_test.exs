@@ -14,10 +14,11 @@ defmodule AssemblyScriptLS.RuntimeTest do
       assert msg == "The project root is invalid or doesn't exist."
     end
     
-    test "returns an error message when the configuration file is not found" do
+    test "default asconfig? false and release target when the configuration file is not found" do
       with_mock File, [cd: fn _ -> :ok end, exists?: fn _ -> false end] do
-        {:error, msg} = Runtime.ensure "root"
-        assert msg == "No asconfig.json file found."
+        {:ok, rt} = Runtime.ensure "root"
+        refute rt.asconfig?
+        assert rt.target == "release"
       end
     end
 
