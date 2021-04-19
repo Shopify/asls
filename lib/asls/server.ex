@@ -16,6 +16,8 @@ defmodule AssemblyScriptLS.Server do
   @runtime Application.get_env(:asls, :runtime)
   @analysis Application.get_env(:asls, :analysis)
 
+  alias AssemblyScriptLS.Diagnostic
+  alias AssemblyScriptLS.Assertion
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
     Notification,
