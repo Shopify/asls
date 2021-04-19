@@ -9,7 +9,7 @@ defmodule AssemblyScriptLS.Server do
     root_uri: nil,
     error_codes: %AssemblyScriptLS.Server.ErrorCodes{},
     analyses: %{},
-    runtime: nil
+    runtime: %AssemblyScriptLS.Runtime{}
   }
 
   @rpc Application.get_env(:asls, :rpc)
@@ -79,6 +79,15 @@ defmodule AssemblyScriptLS.Server do
       #{@runtime.to_string(state.runtime)}
       """
     )
+
+    unless state.runtime.asconfig? do
+      @rpc.notify(
+        :warning,
+        """
+        No asconfig.json found, consider adding one to improve the language server experience
+        """
+      )
+    end
 
     {:noreply, %{state | initialized: true}}
   end

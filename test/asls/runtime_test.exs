@@ -15,7 +15,12 @@ defmodule AssemblyScriptLS.RuntimeTest do
     end
     
     test "default asconfig? false and release target when the configuration file is not found" do
-      with_mock File, [cd: fn _ -> :ok end, exists?: fn _ -> false end] do
+      exists = fn
+          "./node_modules/.bin/asc" -> true
+        _ -> false
+      end
+
+      with_mock File, [:passthrough], [cd: fn _ -> :ok end, exists?: exists] do
         {:ok, rt} = Runtime.ensure "root"
         refute rt.asconfig?
         assert rt.target == "release"

@@ -34,7 +34,7 @@ defmodule AssemblyScriptLS.ServerTest do
       req = Message.new(%{jsonrpc: Message.rpc_version, id: 1, method: "initialize", params: params})
 
       AssemblyScriptLS.Runtime.Mock
-      |> expect(:ensure, fn _ -> {:ok, %{root_uri: @root_path}} end)
+      |> expect(:ensure, fn _ -> {:ok, %{root_uri: @root_path, asconfig?: true}} end)
 
       {:ok, {type, id, server_info}} = Server.handle_request(req, @process)
 
@@ -75,6 +75,7 @@ defmodule AssemblyScriptLS.ServerTest do
 
       AssemblyScriptLS.JsonRpc.Mock
       |> expect(:notify, fn :info, _ -> :ok end)
+      |> expect(:notify, fn :warning, _ -> :ok end)
 
 
       AssemblyScriptLS.Runtime.Mock
