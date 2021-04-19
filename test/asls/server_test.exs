@@ -94,7 +94,7 @@ defmodule AssemblyScriptLS.ServerTest do
       |> expect(:notify, fn "textDocument/publishDiagnostics", ^diagnostics -> :ok end)
 
       AssemblyScriptLS.Analysis.Mock
-      |> expect(:new, fn _, _ -> %{diagnostics: []} end)
+      |> expect(:new, fn _, _ -> %{diagnostics: [], assertions: []} end)
 
       :ok =
         Message.new(%{jsonrpc: Message.rpc_version, method: "textDocument/didOpen", params: params})
