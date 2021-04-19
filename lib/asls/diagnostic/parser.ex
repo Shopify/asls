@@ -9,6 +9,7 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
   - PEDANTIC
   """
   alias AssemblyScriptLS.Diagnostic
+  alias AssemblyScriptLS.Assertion
   import NimbleParsec
   require OK
 
@@ -61,21 +62,27 @@ defmodule AssemblyScriptLS.Diagnostic.Parser do
     source
     |> eventually(range)
 
-
   defparsec :parse_diagnostic, diagnostic
   defparsec :parse_location, location
 
 
-   
+
   @doc """
   Extracts compilation diagnostics from an abitrary string.
   The diagnostics are grouped by source uri.
+
+  Multiple assertions are assumed, but currently a single assertion
+  brings down the entire compiler.
   """
-  @spec parse(String.t, String.t) :: {String.t, [Diagnostic.t]}
+  @spec parse(String.t, String.t) :: {String.t, [Diagnostic.t]} | {String.t, [Assertion.t]}
   def parse(uri, content) do
-    diagnostics = String.split(content, "\n")
-    |> Enum.map(&String.trim/1)
-    |> do_parse([])
+    diagnostics = if String.contains?(content, "assertion failed") do
+      [Assertion.new(content)]
+    else
+      String.split(content, "\n")
+      |> Enum.map(&String.trim/1)
+      |> do_parse([])
+    end
 
     # Mostly a hack due to how tasks are setup right now
     # should be good to remove once tasks are supervised and can be awaited on
