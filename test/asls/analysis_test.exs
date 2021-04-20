@@ -34,6 +34,13 @@ defmodule AssemblyScriptLS.AnalysisTest do
     end
   end
 
+  describe "assertions" do
+    test "sets the assertions for an analysis", %{analysis: analysis} do
+      analysis = Analysis.assertions(analysis, [1])
+      assert length(analysis.assertions) == 1
+    end
+  end
+
   describe "cancel/1" do
     test "calls Task.shutdown/2 on the analysis task", %{analysis: analysis} do
       Process.monitor(analysis.task.pid)

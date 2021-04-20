@@ -6,6 +6,7 @@
 defmodule AssemblyScriptLS.Analysis do
   alias AssemblyScriptLS.Runtime
   alias AssemblyScriptLS.Diagnostic
+  alias AssemblyScriptLS.Assertion
 
   @behaviour AssemblyScriptLS.Analysis.Behaviour
 
@@ -15,12 +16,13 @@ defmodule AssemblyScriptLS.Analysis do
     id: String.t,
     runtime: Runtime.t,
     task: Task.t,
-    diagnostics: [Diagnostic.t]
+    diagnostics: [Diagnostic.t],
+    assertions: [Assertion.t],
   }
   @required_keys [:runtime, :id, :diagnostics]
   @enforce_keys @required_keys
 
-  defstruct [:runtime, :id, :diagnostics, :task]
+  defstruct [:runtime, :id, :diagnostics, :task, :assertions]
 
   def new(runtime, id) do
     task = perform(runtime, id)
@@ -28,12 +30,17 @@ defmodule AssemblyScriptLS.Analysis do
       runtime: runtime,
       id: id,
       task: task,
-      diagnostics: []
+      diagnostics: [],
+      assertions: [],
     ])
   end
 
   def diagnostics(analysis = %__MODULE__{}, diagnostics) do
     %{analysis | diagnostics: diagnostics}
+  end
+
+  def assertions(analysis = %__MODULE__{}, assertions) do
+    %{analysis | assertions: assertions}
   end
 
   def cancel(analysis = %__MODULE__{}) do

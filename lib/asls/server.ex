@@ -16,6 +16,8 @@ defmodule AssemblyScriptLS.Server do
   @runtime Application.get_env(:asls, :runtime)
   @analysis Application.get_env(:asls, :analysis)
 
+  alias AssemblyScriptLS.Diagnostic
+  alias AssemblyScriptLS.Assertion
   alias AssemblyScriptLS.JsonRpc.Message.{
     Request,
     Notification,
@@ -98,11 +100,10 @@ defmodule AssemblyScriptLS.Server do
 
     uri = req.params[:textDocument].uri
     state = enqueue_analysis(state, uri)
+    analysis = state.analyses[uri]
 
-    @rpc.notify("textDocument/publishDiagnostics", %{
-      uri: uri,
-      diagnostics: state.analyses[uri].diagnostics
-    })
+    publish_diagnostics(uri, analysis.diagnostics)
+    notify_assertions(analysis.assertions)
 
     {:noreply, state}
   end
@@ -126,13 +127,13 @@ defmodule AssemblyScriptLS.Server do
 
   @impl true
   def handle_info({_ref, {uri, payload}}, state) do
-    @rpc.notify("textDocument/publishDiagnostics", %{
-      uri: uri,
-      diagnostics: payload
-    })
+    {diagnostics, assertions} = split_analysis_payload(payload)
+    publish_diagnostics(uri, diagnostics)
+    notify_assertions(assertions)
 
     analysis = state.analyses[uri]
-               |> @analysis.diagnostics(payload)
+               |> @analysis.diagnostics(diagnostics)
+               |> @analysis.assertions(assertions)
 
     state = %{state | analyses: Map.put(state.analyses, uri, analysis)}
 
@@ -161,7 +162,7 @@ defmodule AssemblyScriptLS.Server do
     }
   end
 
-  def enqueue_analysis(state, uri) do
+  defp enqueue_analysis(state, uri) do
     analysis = state.analyses[uri]
     if analysis do
       analysis = @analysis.reenqueue(analysis)
@@ -169,6 +170,40 @@ defmodule AssemblyScriptLS.Server do
     else
       analysis = @analysis.new(state.runtime, uri)
       %{state | analyses: Map.put_new(state.analyses, uri, analysis)}
+    end
+  end
+
+  defp split_analysis_payload(payload) do
+    Enum.split_with(payload, fn e ->
+      case e do
+        %Diagnostic{} -> true
+        %Assertion{} -> false
+      end
+    end)
+  end
+
+  defp publish_diagnostics(uri, diagnostics) do
+    @rpc.notify("textDocument/publishDiagnostics", %{
+      uri: uri,
+      diagnostics: diagnostics,
+    })
+  end
+
+  def notify_assertions(assertions) do
+    case assertions do
+      [] -> :ok
+      as ->
+        @rpc.notify(
+          :error,
+          """
+          The assemblyscript compiler (asc) crashed.
+          Check the content of the crash, and submit an
+          issue or pull-request upstream.
+          """
+        )
+        Enum.each(as, fn a ->
+          @rpc.notify(:error, a.contents)
+        end)
     end
   end
 end
