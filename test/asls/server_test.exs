@@ -139,12 +139,12 @@ defmodule AssemblyScriptLS.ServerTest do
     end
 
     test "on workspace/DidChangeConfiguration the include setting is saved" do
-      params = %{settings: %{asls: %{include: "assembly/**/*.as"}}}
+      params = %{settings: %{asls: %{include: ["assembly/**/*.as"]}}}
       :ok =
         Message.new(%{jsonrpc: Message.rpc_version, method: "workspace/didChangeConfiguration", params: params})
         |> Server.handle_notification(@process)
 
-      assert current_state().include  == "assembly/**/*.as"
+      assert current_state().include  == ["assembly/**/*.as"]
     end
   end
 

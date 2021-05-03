@@ -6,7 +6,7 @@ defmodule AssemblyScriptLS.Server do
   @name "AssemblyScript Language Server"
   @state %{
     initialized: false,
-    include: "assembly/**/*.ts",
+    include: ["assembly/**/*.ts", "assembly/*.ts"],
     root_uri: nil,
     error_codes: %AssemblyScriptLS.Server.ErrorCodes{},
     analyses: %{},
@@ -207,7 +207,7 @@ defmodule AssemblyScriptLS.Server do
     target_path = URI.decode(URI.parse(target_uri).path)
     root_path = URI.decode(URI.parse(root_uri).path)
     relative = Path.relative_to(target_path, root_path)
-    :glob.matches(relative, glob)
+    Enum.any?(glob, fn g -> Wild.match?(relative, g) end)
   end
 
   defp publish_diagnostics(uri, diagnostics) do
