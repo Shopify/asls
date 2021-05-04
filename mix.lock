@@ -1,4 +1,7 @@
 %{
+  "ex_brace_expansion": {:hex, :ex_brace_expansion, "0.0.2", "7574fd9497f3f045346dfd9517f10f237f4d39137bf42142b0fbdcd4bacbc6ed", [:mix], [], "hexpm", "d7470a00cffe4425f89e83d7288c24b641c3f6cbde136a08089e7420467cd237"},
+  "ex_minimatch": {:hex, :ex_minimatch, "0.0.1", "4b41726183c104ac227c5996f083ec370f97bd38c2232d74a847888c1bb715bc", [:mix], [{:ex_brace_expansion, "~> 0.0.1", [hex: :ex_brace_expansion, repo: "hexpm", optional: false]}], "hexpm", "3255bb8496635d3ef5d86ec6829958a3573ff730ca01534b0fead9c2e3af7de4"},
+  "glob": {:hex, :glob, "1.0.0", "b4d54d66e7797ce037cdd18f2587fc9932187355340e222cafe125cd333d7a0a", [:rebar3], [], "hexpm", "ca25de25ac5a762ba6c979718ae6afef8402cfc9155b87479d215fbe676801e1"},
   "jason": {:hex, :jason, "1.2.1", "12b22825e22f468c02eb3e4b9985f3d0cb8dc40b9bd704730efa11abd2708c44", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "b659b8571deedf60f79c5a608e15414085fa141344e2716fbd6988a084b5f993"},
   "meck": {:hex, :meck, "0.8.13", "ffedb39f99b0b99703b8601c6f17c7f76313ee12de6b646e671e3188401f7866", [:rebar3], [], "hexpm", "d34f013c156db51ad57cc556891b9720e6a1c1df5fe2e15af999c84d6cebeb1a"},
   "mock": {:hex, :mock, "0.3.6", "e810a91fabc7adf63ab5fdbec5d9d3b492413b8cda5131a2a8aa34b4185eb9b4", [:mix], [{:meck, "~> 0.8.13", [hex: :meck, repo: "hexpm", optional: false]}], "hexpm", "bcf1d0a6826fb5aee01bae3d74474669a3fa8b2df274d094af54a25266a1ebd2"},
@@ -6,4 +9,5 @@
   "nimble_parsec": {:hex, :nimble_parsec, "0.5.3", "def21c10a9ed70ce22754fdeea0810dafd53c2db3219a0cd54cf5526377af1c6", [:mix], [], "hexpm", "589b5af56f4afca65217a1f3eb3fee7e79b09c40c742fddc1c312b3ac0b3399f"},
   "ok": {:hex, :ok, "2.3.0", "0a3d513ec9038504dc5359d44e14fc14ef59179e625563a1a144199cdc3a6d30", [:mix], [], "hexpm", "f0347b3f8f115bf347c704184b33cf084f2943771273f2b98a3707a5fa43c4d5"},
   "optimus": {:hex, :optimus, "0.2.0", "3e868b8bedc723d70189cde715df3ef804524c55b26fb33e89cd0f691f50fe80", [:mix], [], "hexpm", "95bcbf228d4ba67283747629087cc3650b10d24390e4ea533b0a64ca278c181c"},
+  "wild": {:hex, :wild, "1.0.0", "b84b3fb9010d82c94870ff4cce5cfaea63fe6645236bf40987bd918bbbd40e99", [:mix], [], "hexpm", "ef200c6265f47f824fdaa5865d11ef6767ac4f7733b865acc61e26ef0344aeee"},
 }

@@ -6,6 +6,7 @@ defmodule AssemblyScriptLS.Server do
   @name "AssemblyScript Language Server"
   @state %{
     initialized: false,
+    include: ["assembly/**/*.ts", "assembly/*.ts"],
     root_uri: nil,
     error_codes: %AssemblyScriptLS.Server.ErrorCodes{},
     analyses: %{},
@@ -99,11 +100,11 @@ defmodule AssemblyScriptLS.Server do
     GenServer.reply(from, :ok)
 
     uri = req.params[:textDocument].uri
-    state = enqueue_analysis(state, uri)
-    analysis = state.analyses[uri]
-
-    publish_diagnostics(uri, analysis.diagnostics)
-    notify_assertions(analysis.assertions)
+    {analysis, state} = enqueue_analysis(state, uri)
+    if analysis do
+      publish_diagnostics(uri, analysis.diagnostics)
+      notify_assertions(analysis.assertions)
+    end
 
     {:noreply, state}
   end
@@ -111,8 +112,20 @@ defmodule AssemblyScriptLS.Server do
   @impl true
   def handle_call({:notification, %Notification{method: "textDocument/didSave"} = req}, from, state) do
     GenServer.reply(from, :ok)
-    state = enqueue_analysis(state, req.params[:textDocument].uri)
+    {_, state} = enqueue_analysis(state, req.params[:textDocument].uri)
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_call({:notification, %Notification{method: "workspace/didChangeConfiguration"} = req}, from, state) do
+    GenServer.reply(from, :ok)
+    include = req.params[:settings][:asls][:include]
+
+    if include do
+      {:noreply, %{state | include: include}}
+    else
+      {:noreply, state}
+    end
   end
 
   @impl true
@@ -125,6 +138,9 @@ defmodule AssemblyScriptLS.Server do
     {:noreply, state}
   end
 
+  # When receiving an info message from a task, we are certain that it refers
+  # to a valid analysis and to an analyzable document. That's the reason why we
+  # don't perform any check to see if the analysis exists.
   @impl true
   def handle_info({_ref, {uri, payload}}, state) do
     {diagnostics, assertions} = split_analysis_payload(payload)
@@ -163,13 +179,18 @@ defmodule AssemblyScriptLS.Server do
   end
 
   defp enqueue_analysis(state, uri) do
-    analysis = state.analyses[uri]
-    if analysis do
-      analysis = @analysis.reenqueue(analysis)
-      %{state | analyses: Map.put(state.analyses, uri, analysis)}
-    else
-      analysis = @analysis.new(state.runtime, uri)
-      %{state | analyses: Map.put_new(state.analyses, uri, analysis)}
+    case analyzable?(state.root_uri, uri, state.include) do
+      true ->
+        analysis = state.analyses[uri]
+        if analysis do
+          analysis = @analysis.reenqueue(analysis)
+          {analysis, %{state | analyses: Map.put(state.analyses, uri, analysis)}}
+        else
+          analysis = @analysis.new(state.runtime, uri)
+          {analysis, %{state | analyses: Map.put_new(state.analyses, uri, analysis)}}
+        end
+      false ->
+        {nil, state}
     end
   end
 
@@ -180,6 +201,13 @@ defmodule AssemblyScriptLS.Server do
         %Assertion{} -> false
       end
     end)
+  end
+
+  defp analyzable?(root_uri, target_uri, glob) do
+    target_path = URI.decode(URI.parse(target_uri).path)
+    root_path = URI.decode(URI.parse(root_uri).path)
+    relative = Path.relative_to(target_path, root_path)
+    Enum.any?(glob, fn g -> Wild.match?(relative, g) end)
   end
 
   defp publish_diagnostics(uri, diagnostics) do
