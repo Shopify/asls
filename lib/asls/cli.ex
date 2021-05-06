@@ -3,6 +3,7 @@ defmodule AssemblyScriptLS.CLI do
 
   alias AssemblyScriptLS.Environment
 
+  @spec main([String.t]) :: no_return()
   def main(argv) do
     parse!(argv)
   end
