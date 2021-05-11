@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Creating release for Linux"
+
 docker build -f Dockerfile.linux -t asls .
 docker cp $(docker create asls:latest):/app ./bin/asls
 

@@ -7,15 +7,9 @@ if [ $OS != "Darwin" ]; then
   exit 1
 fi
 
-echo "Creating release for"
-echo $OS
+echo "Creating release for Mac"
 
-MIX_ENV=prod mix release --overwrite
-
-echo "Cleaning previous build artifacts"
-
-rm -rf bin/asls
-rm -rf bin/asls-mac.tar.gz
+mix release --overwrite
 
 echo "Copying release to bin/ directory"
 mv _build/prod/rel/asls bin/
@@ -23,6 +17,10 @@ mv _build/prod/rel/asls bin/
 echo "Bundling the realse"
 cd bin/
 tar cvzf asls-mac.tar.gz asls
+
+rm -rf asls
+
+cd ..
 
 echo "Done!"
 
