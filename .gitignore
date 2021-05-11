@@ -20,7 +20,8 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-asls-*.tar
+bin/*.tar.gz
+
 
 # Ignore binary
 bin/asls
@@ -32,3 +33,5 @@ bin.tar.gz
 
 .idea
 asls.iml
+
+.DS_Store

@@ -1,32 +1,33 @@
-.PHONY: release clean mix zip hash test build
+.PHONY: release clean mix test build nix mac linux
 
 SHELL := /bin/bash
 MIX_ENV=prod
 
 default: release
 
-release: clean mix zip hash
+release: export MIX_ENV=prod
+release: clean mix mac linux
 
 clean:
-	rm -rf bin
-	rm -rf bin.tar.gz
+	rm -rf bin/nix
+	rm -rf bin/*.tar.gz
+	rm -rf bin/asls
 
 mix:
 	mix local.hex --force
 	mix clean
 	mix deps.get
-	mix escript.build
 
-zip:
-	tar cvzf bin.tar.gz bin
+mac:
+	./bin/release_mac.sh
 
-hash:
-	nix-hash --flat --base32 --type sha256 bin.tar.gz
+linux:
+	./bin/release_linux.sh
 
-test: MIX_ENV = test
+test: export MIX_ENV=test
 test:
 	mix test
 
-build: MIX_ENV = prod
+build: export MIX_ENV=prod
 build:
 	mix escript.build
