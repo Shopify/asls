@@ -1,4 +1,4 @@
-FROM elixir:1.11-slim as builder
+FROM elixir:1.10-slim as builder
 
 RUN apt-get -qq update
 RUN apt-get -qq install git build-essential python
