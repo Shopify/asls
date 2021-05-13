@@ -8,6 +8,15 @@ defmodule AssemblyScriptLS.CLI do
     parse!(argv)
   end
 
+  @spec start_with_options(Keyword.t) :: no_return()
+  def start_with_options(opts) do
+    debug? = Keyword.get(opts, :debug, false)
+    level = if debug?, do: :debug, else: :error
+    port = Keyword.get(opts, :port, nil)
+
+    AssemblyScriptLS.TCP.start(port: port, debug: level)
+  end
+
   defp parse!(argv) do
     result = Optimus.parse!(config(), argv)
     process(result)
