@@ -46,7 +46,7 @@ defmodule AssemblyScriptLS.MixProject do
     ]
   end
 
-  defp version, do: "0.5.1"
+  defp version, do: "0.6.0"
 
   defp elixirc_paths(:test), do: ["test/support", "lib"]
   defp elixirc_paths(_),     do: ["lib"]

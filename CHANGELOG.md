@@ -4,12 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.6.0] - 2021-05-17
 
 ### Added
+- [Distribution] Add self-contained releases
+- [Configuration] Add configurable include paths, defaults to `assembly/*.ts`
+  and `assembly/**/*.ts`
+- [Analysis] Report AssemblyScript assertions
+- [Runtime] Remove the requirement for asconfig.json
+- [Analysis] Enqueue an analysis per file, instead of building the whole
+  project at once
 - [Environment, Editors.VSCode] Add setup command ([#44](https://github.com/saulecabrera/asls/pull/44))
 - [Server] Improve the backpressure and communication mechanism
 - [Runtime] Added a runtime module to represent the resolution of runtime dependencies
+
+### Deprecated
+- [Distribution] Distribution through Nix, the official distribution mechanism will be the
+  self-contained releases (erlang releases)
 
 ## [0.5.1] - 2020-10-10
 
