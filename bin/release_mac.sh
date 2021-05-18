@@ -16,7 +16,7 @@ mv _build/prod/rel/asls bin/
 
 echo "Bundling the realse"
 cd bin/
-tar cvzf asls-mac.tar.gz asls
+tar cvzf asls-darwin.tar.gz asls
 
 rm -rf asls
 
