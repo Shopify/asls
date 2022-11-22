@@ -1,3 +1,7 @@
+# NOTE
+Please note: This repository is currently unmaintained. If you'd like to add features or fix issues, consider creating a fork. Please be aware that we are not going to be updating issues or pull requests on this repository.
+
+
 # AssemblyScript Language Server
 ![](https://github.com/saulecabrera/asls/workflows/CI/badge.svg)
 
